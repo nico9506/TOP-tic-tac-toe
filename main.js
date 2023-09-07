@@ -17,6 +17,7 @@ const Tile = (x, y) => {
         newDiv.setAttribute("class", "tile");
         newDiv.setAttribute("corX", x);
         newDiv.setAttribute("corY", y);
+        newDiv.innerHTML = `<h1>${tileValue}</h1>`;
 
         return newDiv;
     };
@@ -53,10 +54,21 @@ const GameBoardGenerator = (() => {
 
     const tilesByColumn = 3;
     const tilesByRow = 3;
-    const tilesArray = [];
-    const boardElement = document.getElementById("board");
+    let tilesArray = [];
+    let pivotArray = [];
+    let boardElement;
+    // let boardElement = document.getElementById("board");
+    // const bodyElement = document.getElementsByTagName("body");
 
-    const generateBoard = () => {
+    const deleteBoard = () => {
+        if (boardElement) boardElement.remove();
+        boardElement = document.createElement("div");
+        boardElement.setAttribute("id", "board");
+        document.body.appendChild(boardElement);
+        tilesArray.length = 0; //Clear the existing array
+    };
+
+    const generateEmptyBoard = () => {
         for (let i = 0; i < tilesByColumn; i++) {
             for (let j = 0; j < tilesByRow; j++) {
                 const newTile = Tile(i, j);
@@ -66,7 +78,22 @@ const GameBoardGenerator = (() => {
         }
     };
 
+    const restartBoard = () => {
+        deleteBoard();
+        generateEmptyBoard();
+    };
+
+    const refreshBoard = () => {
+        pivotArray = [...tilesArray];
+        deleteBoard();
+        tilesArray = [...pivotArray];
+        pivotArray.length = 0;
+        for (let i = 0; i < tilesArray.length; i++) {
+            boardElement.appendChild(tilesArray[i].createTileElement());
+        }
+    };
+
     const getTilesArray = () => tilesArray;
 
-    return { generateBoard, getTilesArray };
+    return { getTilesArray, restartBoard, refreshBoard };
 })();
