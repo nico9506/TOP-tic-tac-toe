@@ -8,7 +8,8 @@ const Tile = (x, y) => {
 
     let tileValue = ""; //Keep the player icon 'X' or 'O' who took the tile
 
-    const setTileValue = value => tileValue = value;
+    const getTileValue = () => tileValue;
+    const setTileValue = (value) => (tileValue = value);
 
     const createTileElement = () => {
         let newDiv = document.createElement("div");
@@ -18,31 +19,54 @@ const Tile = (x, y) => {
         newDiv.setAttribute("corY", y);
 
         return newDiv;
-    }
+    };
 
-    return {getCoordinateX, getCoordinateY, setTileValue, createTileElement};
-}
+    return {
+        getCoordinateX,
+        getCoordinateY,
+        getTileValue,
+        setTileValue,
+        createTileElement,
+    };
+};
 
-const gameBoardGenerator = (() => {
+const Player = (nickname, mark) => {
     /**
-     * Generates the game board, which is formed by an array of tiles, 
+     * Generate player objects
+     */
+    let score = 0;
+
+    const getNickname = () => nickname;
+    const getMark = () => mark;
+    const getScore = () => score;
+
+    const addScorePoint = () => score++;
+
+    return { getNickname, getMark, getScore, addScorePoint };
+};
+
+const GameBoardGenerator = (() => {
+    /**
+     * Generates the game board, which is formed by an array of tiles,
      * to be placed in the interface within the div#board HTML element
      */
+
     const tilesByColumn = 3;
     const tilesByRow = 3;
     const tilesArray = [];
     const boardElement = document.getElementById("board");
 
-    for (let i = 0; i < tilesByColumn; i++) {
-        for (let j = 0; j < tilesByRow; j++) {
-            const newTile = Tile(i, j);
-            tilesArray.push(newTile);
-            boardElement.appendChild(newTile.createTileElement());
+    const generateBoard = () => {
+        for (let i = 0; i < tilesByColumn; i++) {
+            for (let j = 0; j < tilesByRow; j++) {
+                const newTile = Tile(i, j);
+                tilesArray.push(newTile);
+                boardElement.appendChild(newTile.createTileElement());
+            }
         }
-    }
+    };
 
-    // let newTile = Tile(0, 1);
-    // boardElement.appendChild(newTile.createTileElement());
+    const getTilesArray = () => tilesArray;
 
+    return { generateBoard, getTilesArray };
 })();
-
