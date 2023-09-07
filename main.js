@@ -17,7 +17,7 @@ const Tile = (x, y) => {
         newDiv.setAttribute("class", "tile");
         newDiv.setAttribute("corX", x);
         newDiv.setAttribute("corY", y);
-        newDiv.innerHTML = `<h1>${tileValue}</h1>`;
+        newDiv.innerHTML = `<span class="tile-value">${tileValue}</span>`;
 
         return newDiv;
     };
@@ -31,22 +31,21 @@ const Tile = (x, y) => {
     };
 };
 
-const Player = (nickname, mark) => {
+const Player = (nickname) => {
     /**
      * Generate player objects
      */
     let score = 0;
 
     const getNickname = () => nickname;
-    const getMark = () => mark;
     const getScore = () => score;
 
     const addScorePoint = () => score++;
 
-    return { getNickname, getMark, getScore, addScorePoint };
+    return { getNickname, getScore, addScorePoint };
 };
 
-const GameBoardGenerator = (() => {
+const GameBoard = (() => {
     /**
      * Generates the game board, which is formed by an array of tiles,
      * to be placed in the interface within the div#board HTML element
@@ -57,8 +56,6 @@ const GameBoardGenerator = (() => {
     let tilesArray = [];
     let pivotArray = [];
     let boardElement;
-    // let boardElement = document.getElementById("board");
-    // const bodyElement = document.getElementsByTagName("body");
 
     const deleteBoard = () => {
         if (boardElement) boardElement.remove();
@@ -97,3 +94,44 @@ const GameBoardGenerator = (() => {
 
     return { getTilesArray, restartBoard, refreshBoard };
 })();
+
+const EventListeners = (() => {
+    /**
+     * 
+     */
+
+
+    const getTile = (x, y) => {
+        const tilesArray = GameBoard.getTilesArray();
+
+        for (let i = 0; i < tilesArray.length; i++) {
+            if (
+                tilesArray[i].getCoordinateX() == x &&
+                tilesArray[i].getCoordinateY() == y
+            )
+                return tilesArray[i];
+        }
+
+        return 0;
+    };
+
+    const activateTiles = () => {
+        const tileElements = [...document.querySelectorAll("div.tile")];
+
+        tileElements.forEach((element) => {
+            element.addEventListener("click", () => {
+                EventListeners.getTile(
+                    Number(element.getAttribute("corX")),
+                    Number(element.getAttribute("corY"))
+                ).setTileValue("X");
+                GameBoard.refreshBoard();
+            });
+        });
+    };
+
+    return { activateTiles, getTile };
+})();
+
+// const StartGame = (() => {
+
+// })();
