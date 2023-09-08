@@ -48,7 +48,7 @@ const Player = (nickname) => {
 const GameBoard = (() => {
     /**
      * Generates the game board, which is formed by an array of tiles,
-     * to be placed in the interface within the div#board HTML element
+     * to be placed in the interface within a div#board HTML element
      */
 
     const tilesByColumn = 3;
@@ -95,11 +95,10 @@ const GameBoard = (() => {
     return { getTilesArray, restartBoard, refreshBoard };
 })();
 
-const EventListeners = (() => {
+const PlayerActions = (() => {
     /**
-     * 
+     *
      */
-
 
     const getTile = (x, y) => {
         const tilesArray = GameBoard.getTilesArray();
@@ -120,18 +119,51 @@ const EventListeners = (() => {
 
         tileElements.forEach((element) => {
             element.addEventListener("click", () => {
-                EventListeners.getTile(
+                getTile(
                     Number(element.getAttribute("corX")),
                     Number(element.getAttribute("corY"))
                 ).setTileValue("X");
                 GameBoard.refreshBoard();
+                activateTiles();
             });
         });
     };
 
-    return { activateTiles, getTile };
+    return { activateTiles };
 })();
 
-// const StartGame = (() => {
+const Game = (() => {
+    /**
+     * Control the game flow
+     */
+    const newGame = () => {
+        // Set up new players
 
-// })();
+        GameBoard.restartBoard();
+        PlayerActions.activateTiles();
+        
+    };
+
+    const restartGame = () => {
+        // Restart game with same player's config
+
+        GameBoard.restartBoard();
+        PlayerActions.activateTiles();
+        
+    };
+
+    const activateMenu = () => {
+        const newGameBtn = document.getElementById("newgame-btn");
+        newGameBtn.addEventListener("click", newGame);
+
+        const restartGameBtn = document.getElementById("restart-btn");
+        restartGameBtn.addEventListener("click", restartGame);
+    };
+
+    return { activateMenu };
+})();
+
+
+
+/**********************************************************************/
+Game.activateMenu();
