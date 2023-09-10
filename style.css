@@ -122,7 +122,3 @@ footer a:hover {
     font-weight: bold;
     
 }
-
-#board > .tile-marked {
-    background-color: var(--color-theme-sky);
-}
