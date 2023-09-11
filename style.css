@@ -1,5 +1,6 @@
 :root {
     --color-theme-dark: rgb(22, 20, 20);
+    --color-theme-grey: rgb(92, 84, 84);
     --color-theme-light: rgb(230, 219, 219);
     --color-theme-numix: rgb(214, 29, 29);
     --color-theme-sky: rgb(135, 224, 232);
@@ -10,6 +11,10 @@
 
     --nav-height: 5rem;
     --footer-height: 4rem;
+    --main-height: max(
+        calc(var(--board-length) + var(--nav-height)),
+        calc(100vh - var(--nav-height) - var(--footer-height))
+    );
 }
 
 * {
@@ -21,14 +26,17 @@
 
 body {
     background-color: var(--color-theme-sky);
-    display: flex;
+    /* display: flex;
     justify-content: center;
-    align-items: center;
-    height: max(
-        100vh,
-        calc(var(--board-length) + var(--nav-height) + var(--footer-height))
-    );
+    align-items: center; */
+    display: grid;
+    grid-template: var(--nav-height) 1fr var(--footer-height) / 1fr;
+    grid-template-areas:
+        "nav"
+        "game"
+        "footer";
     width: 100%;
+    height: auto;
     overflow: auto;
 }
 
@@ -42,6 +50,7 @@ nav {
     display: flex;
     justify-content: space-around;
     align-items: center;
+    grid-area: nav;
 }
 
 nav > h1.logo {
@@ -70,6 +79,42 @@ nav > ul > li > button:hover {
     background-color: var(--color-theme-numix);
 }
 
+#game-container {
+    grid-area: game;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    /* max-width: calc(var(--board-length)+1px); */
+    /* height: var(--main-height); */
+    width: 100%;
+    height: var(--main-height);
+}
+
+.score-board {
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: center;
+}
+
+.score-board > .player1-info, .score-board > .player2-info {
+    width: calc(var(--board-length) / 2);
+    font-size: 1.3rem;
+    color: var(--color-theme-grey);
+}
+
+.score-board > .player1-info {
+    text-align: left;
+}
+
+.score-board > .player2-info {
+    text-align: right;
+}
+
+.active-player {
+    color: var(--color-theme-dark) !important;
+}
+
 footer {
     height: var(--footer-height);
     width: 100%;
@@ -80,6 +125,7 @@ footer {
     display: flex;
     justify-content: center;
     align-items: center;
+    grid-area: footer;
 }
 
 footer a {
@@ -92,6 +138,8 @@ footer a {
 footer a:hover {
     color: var(--color-theme-numix);
 }
+
+/*********************************************************************/
 
 #board {
     outline: 4px solid var(--color-theme-dark);
@@ -120,5 +168,4 @@ footer a:hover {
 #board > .tile > .tile-value {
     font-size: var(--fs-player-mark);
     font-weight: bold;
-    
 }

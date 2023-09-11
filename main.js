@@ -87,12 +87,13 @@ const GameBoard = (() => {
     let tilesArray = [];
     let pivotArray = [];
     let boardElement;
+    const gameContainerElement = document.getElementById("game-container");
 
     const deleteBoard = () => {
         if (boardElement) boardElement.remove();
         boardElement = document.createElement("div");
         boardElement.setAttribute("id", "board");
-        document.body.appendChild(boardElement);
+        gameContainerElement.appendChild(boardElement);
         tilesArray.length = 0; //Clear the existing array
     };
 
