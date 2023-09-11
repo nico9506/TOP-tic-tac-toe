@@ -86,7 +86,7 @@ const GameBoard = (() => {
     const tilesByRow = 3;
     let tilesArray = [];
     let pivotArray = [];
-    let boardElement;
+    let boardElement = document.getElementById("board");
     const gameContainerElement = document.getElementById("game-container");
 
     const deleteBoard = () => {

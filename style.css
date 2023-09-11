@@ -15,6 +15,9 @@
         calc(var(--board-length) + var(--nav-height)),
         calc(100vh - var(--nav-height) - var(--footer-height))
     );
+
+    /* Used to set up the initial animation */
+    --max-range: calc(var(--board-length) - var(--tile-length));
 }
 
 * {
@@ -169,3 +172,22 @@ footer a:hover {
     font-size: var(--fs-player-mark);
     font-weight: bold;
 }
+
+/********************  Initial Animation *************************/
+#board .animated-container {
+    width: var(--tile-length);
+    height: var(--tile-length);
+    background-color: red;
+    position: relative;
+    animation-name: myAnimation;
+    animation-duration: 4s;
+    animation-iteration-count: infinite;
+  }
+  
+  @keyframes myAnimation {
+    0%   {background-color:red; left:0px; top:0px;}
+    25%  {background-color:yellow; left:var(--max-range); top:0px;}
+    50%  {background-color:blue; left:var(--max-range); top:var(--max-range);}
+    75%  {background-color:green; left:0px; top:var(--max-range);}
+    100% {background-color:red; left:0px; top:0px;}
+  }
