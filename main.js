@@ -8,8 +8,12 @@ const Tile = (x, y) => {
 
     let tileValue = ""; //Keep the player icon 'X' or 'O' who took the tile
 
+    let takenBy; //Save the player who took this tile
+
     const getTileValue = () => tileValue;
     const setTileValue = (value) => (tileValue = value);
+    const getTakenBy = () => takenBy;
+    const setTakenBy = (player) => (takenBy = player);
 
     const createTileElement = () => {
         let newDiv = document.createElement("div");
@@ -28,6 +32,8 @@ const Tile = (x, y) => {
         getTileValue,
         setTileValue,
         createTileElement,
+        getTakenBy,
+        setTakenBy,
     };
 };
 
@@ -44,9 +50,11 @@ const Player = (nickname = "Unknown Player") => {
     const getState = () => isActivePlayer;
     const getMark = () => mark;
 
+    const setNickname = (newName) => (nickname = newName);
     const addScorePoint = () => score++;
     const setState = (state) => (isActivePlayer = state);
     const setPlayerMark = (newMark) => (mark = newMark);
+    const restartScore = () => (score = 0);
 
     return {
         getNickname,
@@ -56,6 +64,8 @@ const Player = (nickname = "Unknown Player") => {
         setState,
         getMark,
         setPlayerMark,
+        restartScore,
+        setNickname,
     };
 };
 
@@ -132,6 +142,15 @@ const PlayerActions = (() => {
      * Allows to add marks to the tiles validating each action according to
      * the game's rules
      */
+    const restartPlayersState = () => {
+        Players.getPlayer1().setState(true);
+        Players.getPlayer2().setState(false);
+    };
+
+    const restartPlayersScore = () => {
+        Players.getPlayer1().restartScore();
+        Players.getPlayer2().restartScore();
+    };
 
     function getTile(x, y) {
         /**
@@ -140,8 +159,10 @@ const PlayerActions = (() => {
         const tilesArray = GameBoard.getTilesArray();
 
         for (let i = 0; i < tilesArray.length; i++) {
-            if (tilesArray[i].getCoordinateX() == x &&
-                tilesArray[i].getCoordinateY() == y)
+            if (
+                tilesArray[i].getCoordinateX() == x &&
+                tilesArray[i].getCoordinateY() == y
+            )
                 return tilesArray[i];
         }
 
@@ -178,33 +199,138 @@ const PlayerActions = (() => {
                     Number(element.getAttribute("corY"))
                 );
                 if (tile.getTileValue() === "") {
-                    tile.setTileValue(getActivePlayer().getMark());
+                    const activePlayer = getActivePlayer();
+                    tile.setTileValue(activePlayer.getMark());
+                    tile.setTakenBy(activePlayer);
                     GameBoard.refreshBoard();
+                    validateWinningCondition();
                     activateTiles();
                 }
             });
         });
     };
 
-    return { activateTiles };
+    const validateWinningCondition = () => {
+        const tilesArray = GameBoard.getTilesArray();
+
+        //Check horizontal winning scenarios
+        if (
+            tilesArray[0].getTileValue() == tilesArray[1].getTileValue() &&
+            tilesArray[0].getTileValue() == tilesArray[2].getTileValue() &&
+            tilesArray[0].getTileValue() !== ""
+        ) {
+            console.log(tilesArray[0].getTakenBy().getNickname());
+            return;
+        }
+
+        if (
+            tilesArray[3].getTileValue() == tilesArray[4].getTileValue() &&
+            tilesArray[3].getTileValue() == tilesArray[5].getTileValue() &&
+            tilesArray[3].getTileValue() !== ""
+        ) {
+            console.log(tilesArray[3].getTakenBy().getNickname());
+            return;
+        }
+
+        if (
+            tilesArray[6].getTileValue() == tilesArray[7].getTileValue() &&
+            tilesArray[6].getTileValue() == tilesArray[8].getTileValue() &&
+            tilesArray[6].getTileValue() !== ""
+        ) {
+            console.log(tilesArray[6].getTakenBy().getNickname());
+            return;
+        }
+
+        //Check vertical winning scenarios
+        if (
+            tilesArray[0].getTileValue() == tilesArray[3].getTileValue() &&
+            tilesArray[0].getTileValue() == tilesArray[6].getTileValue() &&
+            tilesArray[0].getTileValue() !== ""
+        ) {
+            console.log(tilesArray[0].getTakenBy().getNickname());
+            return;
+        }
+
+        if (
+            tilesArray[1].getTileValue() == tilesArray[4].getTileValue() &&
+            tilesArray[1].getTileValue() == tilesArray[7].getTileValue() &&
+            tilesArray[1].getTileValue() !== ""
+        ) {
+            console.log(tilesArray[1].getTakenBy().getNickname());
+            return;
+        }
+
+        if (
+            tilesArray[2].getTileValue() == tilesArray[5].getTileValue() &&
+            tilesArray[2].getTileValue() == tilesArray[8].getTileValue() &&
+            tilesArray[2].getTileValue() !== ""
+        ) {
+            console.log(tilesArray[2].getTakenBy().getNickname());
+            return;
+        }
+
+        //Check diagonal winning scenarios
+        if (
+            tilesArray[0].getTileValue() == tilesArray[4].getTileValue() &&
+            tilesArray[0].getTileValue() == tilesArray[8].getTileValue() &&
+            tilesArray[0].getTileValue() !== ""
+        ) {
+            console.log(tilesArray[0].getTakenBy().getNickname());
+            return;
+        }
+
+        if (
+            tilesArray[2].getTileValue() == tilesArray[4].getTileValue() &&
+            tilesArray[2].getTileValue() == tilesArray[6].getTileValue() &&
+            tilesArray[2].getTileValue() !== ""
+        ) {
+            console.log(tilesArray[2].getTakenBy().getNickname());
+            return;
+        }
+    };
+
+    return { activateTiles, restartPlayersScore, restartPlayersState };
 })();
 
 const Game = (() => {
     /**
      * Control the game flow
      */
+
+    const displayPlayersInfo = () => {
+        const nicknameP1 = document.getElementById("nickname-p1");
+        const scoreP1 = document.getElementById("score-p1");
+        nicknameP1.textContent =
+            Players.getPlayer1().getMark() +
+            ": " +
+            Players.getPlayer1().getNickname();
+        scoreP1.textContent = "Score: " + Players.getPlayer1().getScore();
+
+        const nicknameP2 = document.getElementById("nickname-p2");
+        const scoreP2 = document.getElementById("score-p2");
+        nicknameP2.textContent =
+            Players.getPlayer2().getMark() +
+            ": " +
+            Players.getPlayer2().getNickname();
+        scoreP2.textContent = "Score: " + Players.getPlayer2().getScore();
+    };
+
     const newGame = () => {
         // Set up new players
-
+        displayPlayersInfo();
         GameBoard.restartBoard();
         PlayerActions.activateTiles();
+        PlayerActions.restartPlayersScore();
+        PlayerActions.restartPlayersState();
     };
 
     const restartGame = () => {
         // Restart game with same player's config
-
+        displayPlayersInfo();
         GameBoard.restartBoard();
         PlayerActions.activateTiles();
+        PlayerActions.restartPlayersScore();
+        PlayerActions.restartPlayersState();
     };
 
     const activateMenu = () => {
