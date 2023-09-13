@@ -186,10 +186,14 @@ const PlayerActions = (() => {
         return 0;
     };
 
-    const activateTiles = () => {
+    const activateTiles = (gameState) => {
         /**
          * Only add the eventListener to the tiles with no mark
+         * while the gameState is true (active)
          */
+
+        if (!gameState) return;
+        
         const tileElements = [...document.querySelectorAll("div.tile")];
 
         tileElements.forEach((element) => {
@@ -203,8 +207,7 @@ const PlayerActions = (() => {
                     tile.setTileValue(activePlayer.getMark());
                     tile.setTakenBy(activePlayer);
                     GameBoard.refreshBoard();
-                    validateWinningCondition();
-                    activateTiles();
+                    activateTiles(validateWinningCondition());
                 }
             });
         });
@@ -220,7 +223,7 @@ const PlayerActions = (() => {
             tilesArray[0].getTileValue() !== ""
         ) {
             console.log(tilesArray[0].getTakenBy().getNickname());
-            return;
+            return false;
         }
 
         if (
@@ -229,7 +232,7 @@ const PlayerActions = (() => {
             tilesArray[3].getTileValue() !== ""
         ) {
             console.log(tilesArray[3].getTakenBy().getNickname());
-            return;
+            return false;
         }
 
         if (
@@ -238,7 +241,7 @@ const PlayerActions = (() => {
             tilesArray[6].getTileValue() !== ""
         ) {
             console.log(tilesArray[6].getTakenBy().getNickname());
-            return;
+            return false;
         }
 
         //Check vertical winning scenarios
@@ -248,7 +251,7 @@ const PlayerActions = (() => {
             tilesArray[0].getTileValue() !== ""
         ) {
             console.log(tilesArray[0].getTakenBy().getNickname());
-            return;
+            return false;
         }
 
         if (
@@ -257,7 +260,7 @@ const PlayerActions = (() => {
             tilesArray[1].getTileValue() !== ""
         ) {
             console.log(tilesArray[1].getTakenBy().getNickname());
-            return;
+            return false;
         }
 
         if (
@@ -266,7 +269,7 @@ const PlayerActions = (() => {
             tilesArray[2].getTileValue() !== ""
         ) {
             console.log(tilesArray[2].getTakenBy().getNickname());
-            return;
+            return false;
         }
 
         //Check diagonal winning scenarios
@@ -276,7 +279,7 @@ const PlayerActions = (() => {
             tilesArray[0].getTileValue() !== ""
         ) {
             console.log(tilesArray[0].getTakenBy().getNickname());
-            return;
+            return false;
         }
 
         if (
@@ -285,8 +288,10 @@ const PlayerActions = (() => {
             tilesArray[2].getTileValue() !== ""
         ) {
             console.log(tilesArray[2].getTakenBy().getNickname());
-            return;
+            return false;
         }
+
+        return true;
     };
 
     return { activateTiles, restartPlayersScore, restartPlayersState };
@@ -319,7 +324,7 @@ const Game = (() => {
         // Set up new players
         displayPlayersInfo();
         GameBoard.restartBoard();
-        PlayerActions.activateTiles();
+        PlayerActions.activateTiles(true);
         PlayerActions.restartPlayersScore();
         PlayerActions.restartPlayersState();
     };
@@ -328,7 +333,7 @@ const Game = (() => {
         // Restart game with same player's config
         displayPlayersInfo();
         GameBoard.restartBoard();
-        PlayerActions.activateTiles();
+        PlayerActions.activateTiles(true);
         PlayerActions.restartPlayersScore();
         PlayerActions.restartPlayersState();
     };
