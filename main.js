@@ -51,7 +51,10 @@ const Player = (nickname = "Unknown Player") => {
     const getMark = () => mark;
 
     const setNickname = (newName) => (nickname = newName);
-    const addScorePoint = () => score++;
+    const addScorePoint = () => {
+        score++
+        Game.displayPlayersInfo();
+    };
     const setState = (state) => (isActivePlayer = state);
     const setPlayerMark = (newMark) => (mark = newMark);
     const restartScore = () => (score = 0);
@@ -170,15 +173,23 @@ const PlayerActions = (() => {
     }
 
     const getActivePlayer = () => {
+        const p1Info = document.getElementById("p1-info");
+        const p2Info = document.getElementById("p2-info");
+        const activeClass = "active-player";
+        
         if (Players.getPlayer1().getState()) {
             Players.getPlayer1().setState(false);
             Players.getPlayer2().setState(true);
+            p1Info.classList.remove(activeClass);
+            p2Info.classList.add(activeClass);
             return Players.getPlayer1();
         }
 
         if (Players.getPlayer2().getState()) {
             Players.getPlayer1().setState(true);
             Players.getPlayer2().setState(false);
+            p1Info.classList.add(activeClass);
+            p2Info.classList.remove(activeClass);
             return Players.getPlayer2();
         }
 
@@ -192,9 +203,15 @@ const PlayerActions = (() => {
          * while the gameState is true (active)
          */
 
-        if (!gameState) return;
-        
         const tileElements = [...document.querySelectorAll("div.tile")];
+
+        if (!gameState) {
+            tileElements.forEach((element) => {
+                element.addEventListener("click", Game.continueNextGame);
+            });
+
+            return;
+        }
 
         tileElements.forEach((element) => {
             element.addEventListener("click", () => {
@@ -216,13 +233,20 @@ const PlayerActions = (() => {
     const validateWinningCondition = () => {
         const tilesArray = GameBoard.getTilesArray();
 
+        let loser, winner;
+
         //Check horizontal winning scenarios
+        //Return true or false to continue or not the game 
+
+        // The getActivePlayer() function is called to change the ActivePlayer 
+        // class and highligh needed PlayerInfo. Also it returns the loser player
         if (
             tilesArray[0].getTileValue() == tilesArray[1].getTileValue() &&
             tilesArray[0].getTileValue() == tilesArray[2].getTileValue() &&
             tilesArray[0].getTileValue() !== ""
         ) {
-            console.log(tilesArray[0].getTakenBy().getNickname());
+            loser = getActivePlayer();
+            winner = tilesArray[0].getTakenBy().addScorePoint();
             return false;
         }
 
@@ -231,7 +255,8 @@ const PlayerActions = (() => {
             tilesArray[3].getTileValue() == tilesArray[5].getTileValue() &&
             tilesArray[3].getTileValue() !== ""
         ) {
-            console.log(tilesArray[3].getTakenBy().getNickname());
+            loser = getActivePlayer();
+            winner = tilesArray[3].getTakenBy().addScorePoint();
             return false;
         }
 
@@ -240,7 +265,8 @@ const PlayerActions = (() => {
             tilesArray[6].getTileValue() == tilesArray[8].getTileValue() &&
             tilesArray[6].getTileValue() !== ""
         ) {
-            console.log(tilesArray[6].getTakenBy().getNickname());
+            loser = getActivePlayer();
+            winner = tilesArray[6].getTakenBy().addScorePoint();
             return false;
         }
 
@@ -250,7 +276,8 @@ const PlayerActions = (() => {
             tilesArray[0].getTileValue() == tilesArray[6].getTileValue() &&
             tilesArray[0].getTileValue() !== ""
         ) {
-            console.log(tilesArray[0].getTakenBy().getNickname());
+            loser = getActivePlayer();
+            winner = tilesArray[0].getTakenBy().addScorePoint();
             return false;
         }
 
@@ -259,7 +286,8 @@ const PlayerActions = (() => {
             tilesArray[1].getTileValue() == tilesArray[7].getTileValue() &&
             tilesArray[1].getTileValue() !== ""
         ) {
-            console.log(tilesArray[1].getTakenBy().getNickname());
+            loser = getActivePlayer();
+            winner = tilesArray[1].getTakenBy().addScorePoint();
             return false;
         }
 
@@ -268,7 +296,8 @@ const PlayerActions = (() => {
             tilesArray[2].getTileValue() == tilesArray[8].getTileValue() &&
             tilesArray[2].getTileValue() !== ""
         ) {
-            console.log(tilesArray[2].getTakenBy().getNickname());
+            loser = getActivePlayer();
+            winner = tilesArray[2].getTakenBy().addScorePoint();
             return false;
         }
 
@@ -278,7 +307,8 @@ const PlayerActions = (() => {
             tilesArray[0].getTileValue() == tilesArray[8].getTileValue() &&
             tilesArray[0].getTileValue() !== ""
         ) {
-            console.log(tilesArray[0].getTakenBy().getNickname());
+            loser = getActivePlayer();
+            winner = tilesArray[0].getTakenBy().addScorePoint();
             return false;
         }
 
@@ -287,7 +317,8 @@ const PlayerActions = (() => {
             tilesArray[2].getTileValue() == tilesArray[6].getTileValue() &&
             tilesArray[2].getTileValue() !== ""
         ) {
-            console.log(tilesArray[2].getTakenBy().getNickname());
+            loser = getActivePlayer();
+            winner = tilesArray[2].getTakenBy().addScorePoint();
             return false;
         }
 
@@ -322,21 +353,29 @@ const Game = (() => {
 
     const newGame = () => {
         // Set up new players
-        displayPlayersInfo();
         GameBoard.restartBoard();
         PlayerActions.activateTiles(true);
         PlayerActions.restartPlayersScore();
         PlayerActions.restartPlayersState();
+        displayPlayersInfo();
     };
 
     const restartGame = () => {
         // Restart game with same player's config
-        displayPlayersInfo();
         GameBoard.restartBoard();
         PlayerActions.activateTiles(true);
         PlayerActions.restartPlayersScore();
         PlayerActions.restartPlayersState();
+        displayPlayersInfo();
     };
+
+    const continueNextGame = () => {
+        // Clean the GameBoard to start a new round
+        GameBoard.restartBoard();
+        PlayerActions.restartPlayersState();
+        PlayerActions.activateTiles(true);
+        displayPlayersInfo();
+    }
 
     const activateMenu = () => {
         const newGameBtn = document.getElementById("newgame-btn");
@@ -346,7 +385,7 @@ const Game = (() => {
         restartGameBtn.addEventListener("click", restartGame);
     };
 
-    return { activateMenu };
+    return { activateMenu, displayPlayersInfo, continueNextGame };
 })();
 
 /**********************************************************************/
