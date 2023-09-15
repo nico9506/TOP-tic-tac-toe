@@ -98,6 +98,16 @@ nav > ul > li > button:hover {
     margin-bottom: 1rem;
     display: flex;
     justify-content: center;
+    flex-wrap: wrap;
+    width: var(--board-length);
+}
+
+.score-board > #game-header {
+    font-size: 2rem;
+    font-weight: bold;
+    text-align: center;
+    width: var(--board-length);
+    height: 3rem;
 }
 
 .score-board > .player1-info, .score-board > .player2-info {

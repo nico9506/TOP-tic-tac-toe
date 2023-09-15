@@ -52,7 +52,7 @@ const Player = (nickname = "Unknown Player") => {
 
     const setNickname = (newName) => (nickname = newName);
     const addScorePoint = () => {
-        score++
+        score++;
         Game.displayPlayersInfo();
     };
     const setState = (state) => (isActivePlayer = state);
@@ -176,7 +176,7 @@ const PlayerActions = (() => {
         const p1Info = document.getElementById("p1-info");
         const p2Info = document.getElementById("p2-info");
         const activeClass = "active-player";
-        
+
         if (Players.getPlayer1().getState()) {
             Players.getPlayer1().setState(false);
             Players.getPlayer2().setState(true);
@@ -200,46 +200,75 @@ const PlayerActions = (() => {
     const activateTiles = (gameState) => {
         /**
          * Only add the eventListener to the tiles with no mark
-         * while the gameState is true (active)
+         * while the gameState is 2 (active)
          */
 
         const tileElements = [...document.querySelectorAll("div.tile")];
 
-        if (!gameState) {
-            tileElements.forEach((element) => {
-                element.addEventListener("click", Game.continueNextGame);
-            });
+        switch (gameState) {
+            case 0: //Victory
+                const winner = Players.getPlayer1().getState()
+                    ? Players.getPlayer1().getNickname()
+                    : Players.getPlayer2().getNickname();
 
-            return;
+                tileElements.forEach((element) => {
+                    document.getElementById("game-header").textContent =
+                        winner + " wins!";
+                    element.addEventListener("click", Game.continueNextGame);
+                });
+                break;
+
+            case 1: //Tie
+                tileElements.forEach((element) => {
+                    document.getElementById("game-header").textContent =
+                        "It's a tie!";
+                    element.addEventListener("click", Game.continueNextGame);
+                });
+                break;
+
+            case 2: //Continue
+                tileElements.forEach((element) => {
+                    element.addEventListener("click", () => {
+                        let tile = getTile(
+                            Number(element.getAttribute("corX")),
+                            Number(element.getAttribute("corY"))
+                        );
+                        if (tile.getTileValue() === "") {
+                            const activePlayer = getActivePlayer();
+                            tile.setTileValue(activePlayer.getMark());
+                            tile.setTakenBy(activePlayer);
+                            GameBoard.refreshBoard();
+                            activateTiles(validateWinningCondition());
+                        }
+                    });
+                });
+                break;
+
+            default:
+                break;
         }
-
-        tileElements.forEach((element) => {
-            element.addEventListener("click", () => {
-                let tile = getTile(
-                    Number(element.getAttribute("corX")),
-                    Number(element.getAttribute("corY"))
-                );
-                if (tile.getTileValue() === "") {
-                    const activePlayer = getActivePlayer();
-                    tile.setTileValue(activePlayer.getMark());
-                    tile.setTakenBy(activePlayer);
-                    GameBoard.refreshBoard();
-                    activateTiles(validateWinningCondition());
-                }
-            });
-        });
     };
 
     const validateWinningCondition = () => {
         const tilesArray = GameBoard.getTilesArray();
+        /**
+         Check horizontal winning scenarios
+         Return 0, 1, 2, 3 to report a victory, a tie, to let continue the
+         game, and game over respectively
+ 
+         The getActivePlayer() function is called to change the ActivePlayer
+         class and highligh needed PlayerInfo. Also it returns the loser player
 
+         The first 8 conditions check victory scenarios, followed by tie case
+         and return 2 to allow the game keep going
+         * 
+         */
         let loser, winner;
 
-        //Check horizontal winning scenarios
-        //Return true or false to continue or not the game 
+        if (Game.getRound() >= 3) {
+            return 3; // Game over
+        }
 
-        // The getActivePlayer() function is called to change the ActivePlayer 
-        // class and highligh needed PlayerInfo. Also it returns the loser player
         if (
             tilesArray[0].getTileValue() == tilesArray[1].getTileValue() &&
             tilesArray[0].getTileValue() == tilesArray[2].getTileValue() &&
@@ -247,7 +276,7 @@ const PlayerActions = (() => {
         ) {
             loser = getActivePlayer();
             winner = tilesArray[0].getTakenBy().addScorePoint();
-            return false;
+            return 0;
         }
 
         if (
@@ -257,7 +286,7 @@ const PlayerActions = (() => {
         ) {
             loser = getActivePlayer();
             winner = tilesArray[3].getTakenBy().addScorePoint();
-            return false;
+            return 0;
         }
 
         if (
@@ -267,7 +296,7 @@ const PlayerActions = (() => {
         ) {
             loser = getActivePlayer();
             winner = tilesArray[6].getTakenBy().addScorePoint();
-            return false;
+            return 0;
         }
 
         //Check vertical winning scenarios
@@ -278,7 +307,7 @@ const PlayerActions = (() => {
         ) {
             loser = getActivePlayer();
             winner = tilesArray[0].getTakenBy().addScorePoint();
-            return false;
+            return 0;
         }
 
         if (
@@ -288,7 +317,7 @@ const PlayerActions = (() => {
         ) {
             loser = getActivePlayer();
             winner = tilesArray[1].getTakenBy().addScorePoint();
-            return false;
+            return 0;
         }
 
         if (
@@ -298,7 +327,7 @@ const PlayerActions = (() => {
         ) {
             loser = getActivePlayer();
             winner = tilesArray[2].getTakenBy().addScorePoint();
-            return false;
+            return 0;
         }
 
         //Check diagonal winning scenarios
@@ -309,7 +338,7 @@ const PlayerActions = (() => {
         ) {
             loser = getActivePlayer();
             winner = tilesArray[0].getTakenBy().addScorePoint();
-            return false;
+            return 0;
         }
 
         if (
@@ -319,10 +348,15 @@ const PlayerActions = (() => {
         ) {
             loser = getActivePlayer();
             winner = tilesArray[2].getTakenBy().addScorePoint();
-            return false;
+            return 0;
         }
 
-        return true;
+        // Check whether game has finished in tie
+        for (let i = 0; i < tilesArray.length; i++) {
+            if (tilesArray[i].getTileValue() == "") return 2; //Game continue
+        }
+
+        return 1; //Tie scenario
     };
 
     return { activateTiles, restartPlayersScore, restartPlayersState };
@@ -332,6 +366,11 @@ const Game = (() => {
     /**
      * Control the game flow
      */
+    let round = 1;
+
+    const newRound = () => round++;
+    const getRound = () => round;
+    const restartRounds = () => (round = 1);
 
     const displayPlayersInfo = () => {
         const nicknameP1 = document.getElementById("nickname-p1");
@@ -354,28 +393,31 @@ const Game = (() => {
     const newGame = () => {
         // Set up new players
         GameBoard.restartBoard();
-        PlayerActions.activateTiles(true);
+        PlayerActions.activateTiles(2);
         PlayerActions.restartPlayersScore();
         PlayerActions.restartPlayersState();
         displayPlayersInfo();
+        document.getElementById("game-header").textContent = "Tic-Tac-Toe";
     };
 
     const restartGame = () => {
         // Restart game with same player's config
         GameBoard.restartBoard();
-        PlayerActions.activateTiles(true);
+        PlayerActions.activateTiles(2);
         PlayerActions.restartPlayersScore();
         PlayerActions.restartPlayersState();
         displayPlayersInfo();
+        document.getElementById("game-header").textContent = "Tic-Tac-Toe";
     };
 
     const continueNextGame = () => {
         // Clean the GameBoard to start a new round
         GameBoard.restartBoard();
         PlayerActions.restartPlayersState();
-        PlayerActions.activateTiles(true);
+        PlayerActions.activateTiles(2);
         displayPlayersInfo();
-    }
+        document.getElementById("game-header").textContent = "Tic-Tac-Toe";
+    };
 
     const activateMenu = () => {
         const newGameBtn = document.getElementById("newgame-btn");
@@ -385,7 +427,14 @@ const Game = (() => {
         restartGameBtn.addEventListener("click", restartGame);
     };
 
-    return { activateMenu, displayPlayersInfo, continueNextGame };
+    return {
+        activateMenu,
+        displayPlayersInfo,
+        continueNextGame,
+        newRound,
+        getRound,
+        restartRounds,
+    };
 })();
 
 /**********************************************************************/
