@@ -207,6 +207,9 @@ const PlayerActions = (() => {
 
         switch (gameState) {
             case 0: //Victory
+                Game.newRound(); //+1 to the round counter
+                if (Game.getRound() >= 3) break; // Game over
+
                 const winner = Players.getPlayer1().getState()
                     ? Players.getPlayer1().getNickname()
                     : Players.getPlayer2().getNickname();
@@ -219,6 +222,9 @@ const PlayerActions = (() => {
                 break;
 
             case 1: //Tie
+                Game.newRound(); //+1 to the round counter
+                if (Game.getRound() >= 3) break; // Game over
+
                 tileElements.forEach((element) => {
                     document.getElementById("game-header").textContent =
                         "It's a tie!";
@@ -245,6 +251,7 @@ const PlayerActions = (() => {
                 break;
 
             default:
+                // Case 3 (game-over) of validateWinningCondition() is received here
                 break;
         }
     };
@@ -252,22 +259,20 @@ const PlayerActions = (() => {
     const validateWinningCondition = () => {
         const tilesArray = GameBoard.getTilesArray();
         /**
-         Check horizontal winning scenarios
-         Return 0, 1, 2, 3 to report a victory, a tie, to let continue the
-         game, and game over respectively
+         Check horizontal winning scenarios returning 
+         0 to report a victory
+         1 to report tie scenario
+         2 to let continue the game
  
          The getActivePlayer() function is called to change the ActivePlayer
-         class and highligh needed PlayerInfo. Also it returns the loser player
+         class (CSS) and highligh needed PlayerInfo. 
+         Also it returns the loser player
 
          The first 8 conditions check victory scenarios, followed by tie case
          and return 2 to allow the game keep going
          * 
          */
         let loser, winner;
-
-        if (Game.getRound() >= 3) {
-            return 3; // Game over
-        }
 
         if (
             tilesArray[0].getTileValue() == tilesArray[1].getTileValue() &&
@@ -351,7 +356,8 @@ const PlayerActions = (() => {
             return 0;
         }
 
-        // Check whether game has finished in tie
+        // To check whether game has finished in tie, all cells are checked to
+        // know if they are holding values.
         for (let i = 0; i < tilesArray.length; i++) {
             if (tilesArray[i].getTileValue() == "") return 2; //Game continue
         }
@@ -366,11 +372,11 @@ const Game = (() => {
     /**
      * Control the game flow
      */
-    let round = 1;
+    let round = 0;
 
     const newRound = () => round++;
     const getRound = () => round;
-    const restartRounds = () => (round = 1);
+    const restartRounds = () => (round = 0);
 
     const displayPlayersInfo = () => {
         const nicknameP1 = document.getElementById("nickname-p1");
@@ -392,6 +398,7 @@ const Game = (() => {
 
     const newGame = () => {
         // Set up new players
+        restartRounds();
         GameBoard.restartBoard();
         PlayerActions.activateTiles(2);
         PlayerActions.restartPlayersScore();
@@ -402,6 +409,7 @@ const Game = (() => {
 
     const restartGame = () => {
         // Restart game with same player's config
+        restartRounds();
         GameBoard.restartBoard();
         PlayerActions.activateTiles(2);
         PlayerActions.restartPlayersScore();
@@ -433,7 +441,6 @@ const Game = (() => {
         continueNextGame,
         newRound,
         getRound,
-        restartRounds,
     };
 })();
 
