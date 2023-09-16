@@ -199,8 +199,7 @@ const PlayerActions = (() => {
 
     const activateTiles = (gameState) => {
         /**
-         * Only add the eventListener to the tiles with no mark
-         * while the gameState is 2 (active)
+         * Add EventListeners to tiles according three different cases
          */
 
         const tileElements = [...document.querySelectorAll("div.tile")];
@@ -208,7 +207,10 @@ const PlayerActions = (() => {
         switch (gameState) {
             case 0: //Victory
                 Game.newRound(); //+1 to the round counter
-                if (Game.getRound() >= 3) break; // Game over
+                if (Game.getRound() >= 3) {
+                    Game.showGameOverHeader();
+                    break; // Game over
+                }
 
                 const winner = Players.getPlayer1().getState()
                     ? Players.getPlayer1().getNickname()
@@ -223,7 +225,10 @@ const PlayerActions = (() => {
 
             case 1: //Tie
                 Game.newRound(); //+1 to the round counter
-                if (Game.getRound() >= 3) break; // Game over
+                if (Game.getRound() >= 3) {
+                    Game.showGameOverHeader();
+                    break; // Game over
+                }
 
                 tileElements.forEach((element) => {
                     document.getElementById("game-header").textContent =
@@ -251,7 +256,6 @@ const PlayerActions = (() => {
                 break;
 
             default:
-                // Case 3 (game-over) of validateWinningCondition() is received here
                 break;
         }
     };
@@ -259,7 +263,7 @@ const PlayerActions = (() => {
     const validateWinningCondition = () => {
         const tilesArray = GameBoard.getTilesArray();
         /**
-         Check horizontal winning scenarios returning 
+         Check results returning:
          0 to report a victory
          1 to report tie scenario
          2 to let continue the game
@@ -274,6 +278,7 @@ const PlayerActions = (() => {
          */
         let loser, winner;
 
+        // Check horizontal winning scenarios
         if (
             tilesArray[0].getTileValue() == tilesArray[1].getTileValue() &&
             tilesArray[0].getTileValue() == tilesArray[2].getTileValue() &&
@@ -374,6 +379,8 @@ const Game = (() => {
      */
     let round = 0;
 
+    const gameHeader = document.getElementById("game-header");
+
     const newRound = () => round++;
     const getRound = () => round;
     const restartRounds = () => (round = 0);
@@ -404,7 +411,7 @@ const Game = (() => {
         PlayerActions.restartPlayersScore();
         PlayerActions.restartPlayersState();
         displayPlayersInfo();
-        document.getElementById("game-header").textContent = "Tic-Tac-Toe";
+        gameHeader.textContent = "Tic-Tac-Toe";
     };
 
     const restartGame = () => {
@@ -415,7 +422,7 @@ const Game = (() => {
         PlayerActions.restartPlayersScore();
         PlayerActions.restartPlayersState();
         displayPlayersInfo();
-        document.getElementById("game-header").textContent = "Tic-Tac-Toe";
+        gameHeader.textContent = "Tic-Tac-Toe";
     };
 
     const continueNextGame = () => {
@@ -424,7 +431,19 @@ const Game = (() => {
         PlayerActions.restartPlayersState();
         PlayerActions.activateTiles(2);
         displayPlayersInfo();
-        document.getElementById("game-header").textContent = "Tic-Tac-Toe";
+        gameHeader.textContent = "Tic-Tac-Toe";
+    };
+
+    const showGameOverHeader = () => {
+        const gOMsg = "Game Over: ";
+        if (Players.getPlayer1().getScore() === Players.getPlayer2().getScore())
+            gameHeader.textContent = gOMsg + "It's a tie!";
+        if (Players.getPlayer1().getScore() > Players.getPlayer2().getScore())
+            gameHeader.textContent =
+                gOMsg + Players.getPlayer1().getNickname() + " wins!";
+        if (Players.getPlayer1().getScore() < Players.getPlayer2().getScore())
+            gameHeader.textContent =
+                gOMsg + Players.getPlayer2().getNickname() + " wins!";
     };
 
     const activateMenu = () => {
@@ -441,6 +460,7 @@ const Game = (() => {
         continueNextGame,
         newRound,
         getRound,
+        showGameOverHeader,
     };
 })();
 
