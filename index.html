@@ -52,14 +52,35 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <span class="close">&times;</span>
-                    <h2>Modal Header</h2>
+                    <h2>New game!</h2>
                 </div>
                 <div class="modal-body">
-                    <p>Some text in the Modal Body</p>
-                    <p>Some other text...</p>
+                    <form action="">
+                        <fieldset>
+                            <legend>Player 1</legend>
+                            <label for="p1-name">Nickname: </label>
+                            <input type="text" name="p1-name" id="p1-name">
+                            <label for="p1-type">Type: </label>
+                            <select name="p1-type" id="p1-type">
+                                <option value="human">Human</option>
+                                <option value="ai">AI</option>
+                            </select>
+                        </fieldset>
+
+                        <fieldset>
+                            <legend>Player 2</legend>
+                            <label for="p2-name">Nickname: </label>
+                            <input type="text" name="p1-name" id="p2-name">
+                            <label for="p2-type">Type: </label>
+                            <select name="p2-type" id="p2-type">
+                                <option value="human">Human</option>
+                                <option value="ai">AI</option>
+                            </select>
+                        </fieldset>
+                    </form>
                 </div>
                 <div class="modal-footer">
-                    <h3>Modal Footer</h3>
+                    <button id="set-game">Start</button>
                 </div>
             </div>
         </div>
