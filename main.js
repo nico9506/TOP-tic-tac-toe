@@ -446,10 +446,33 @@ const Game = (() => {
                 gOMsg + Players.getPlayer2().getNickname() + " wins!";
     };
 
-    const activateMenu = () => {
-        const newGameBtn = document.getElementById("newgame-btn");
-        newGameBtn.addEventListener("click", newGame);
+    const showMenu = () => {        
 
+        
+    };
+
+    const activateMenu = () => {
+        // Get the modal
+        const modal = document.getElementById("new-game-menu");
+
+        // Get the button that opens the modal
+        const newGameBtn = document.getElementById("newgame-btn");
+        // When the user clicks the button, open the modal
+        newGameBtn.addEventListener("click", () => {modal.style.display = "block";});
+
+        // Get the <span> element that closes the modal
+        const span = document.getElementsByClassName("close")[0];
+        // When the user clicks on <span> (x), close the modal
+        span.addEventListener("click", () => {modal.style.display = "none"});
+
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        };
+
+        // Restart game keeping the preview game settings, restartGame()
         const restartGameBtn = document.getElementById("restart-btn");
         restartGameBtn.addEventListener("click", restartGame);
     };
