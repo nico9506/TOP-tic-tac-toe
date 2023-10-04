@@ -381,6 +381,9 @@ const Game = (() => {
 
     const gameHeader = document.getElementById("game-header");
 
+    // Get the modal
+    const modal = document.getElementById("new-game-menu");
+
     const newRound = () => round++;
     const getRound = () => round;
     const restartRounds = () => (round = 0);
@@ -408,10 +411,27 @@ const Game = (() => {
         restartRounds();
         GameBoard.restartBoard();
         PlayerActions.activateTiles(2);
+
+        const p1Name = document.getElementById("p1-name");
+        const p2Name = document.getElementById("p2-name");
+
+        p1Name.value != ""
+            ? Players.getPlayer1().setNickname(p1Name.value)
+            : Players.getPlayer1().setNickname("Player 1");
+
+        p2Name.value != ""
+            ? Players.getPlayer2().setNickname(p2Name.value)
+            : Players.getPlayer2().setNickname("Player 2");
+
+        p1Name.value = "";
+        p2Name.value = "";
+
         PlayerActions.restartPlayersScore();
         PlayerActions.restartPlayersState();
         displayPlayersInfo();
         gameHeader.textContent = "Tic-Tac-Toe";
+
+        modal.style.display = "none"; // Hide the modal after clicking START
     };
 
     const restartGame = () => {
@@ -446,24 +466,24 @@ const Game = (() => {
                 gOMsg + Players.getPlayer2().getNickname() + " wins!";
     };
 
-    const showMenu = () => {        
-
-        
-    };
-
     const activateMenu = () => {
-        // Get the modal
-        const modal = document.getElementById("new-game-menu");
+        /**
+         * Add EventListeners to the menu buttons
+         */
 
         // Get the button that opens the modal
         const newGameBtn = document.getElementById("newgame-btn");
         // When the user clicks the button, open the modal
-        newGameBtn.addEventListener("click", () => {modal.style.display = "block";});
+        newGameBtn.addEventListener("click", () => {
+            modal.style.display = "block";
+        });
 
         // Get the <span> element that closes the modal
         const span = document.getElementsByClassName("close")[0];
         // When the user clicks on <span> (x), close the modal
-        span.addEventListener("click", () => {modal.style.display = "none"});
+        span.addEventListener("click", () => {
+            modal.style.display = "none";
+        });
 
         // When the user clicks anywhere outside of the modal, close it
         window.onclick = function (event) {
@@ -472,7 +492,11 @@ const Game = (() => {
             }
         };
 
-        // Restart game keeping the preview game settings, restartGame()
+        //Set up a new game with new players
+        const startNewGame = document.getElementById("set-game");
+        startNewGame.addEventListener("click", newGame);
+
+        // Restart game keeping the previous game settings, restartGame()
         const restartGameBtn = document.getElementById("restart-btn");
         restartGameBtn.addEventListener("click", restartGame);
     };
