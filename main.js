@@ -8,7 +8,7 @@ const Tile = (x, y) => {
 
     let tileValue = ""; //Keep the player icon 'X' or 'O' who took the tile
 
-    let takenBy; //Save the player who took this tile
+    let takenBy = ""; //Save the player who took this tile
 
     const getTileValue = () => tileValue;
     const setTileValue = (value) => (tileValue = value);
@@ -44,11 +44,13 @@ const Player = (nickname = "Unknown Player") => {
     let score = 0;
     let isActivePlayer = false;
     let mark = "";
+    let playerType = "";
 
     const getNickname = () => nickname;
     const getScore = () => score;
     const getState = () => isActivePlayer;
     const getMark = () => mark;
+    const getPlayerType = () => playerType;
 
     const setNickname = (newName) => (nickname = newName);
     const addScorePoint = () => {
@@ -58,6 +60,7 @@ const Player = (nickname = "Unknown Player") => {
     const setState = (state) => (isActivePlayer = state);
     const setPlayerMark = (newMark) => (mark = newMark);
     const restartScore = () => (score = 0);
+    const setPlayerType = (newType) => (playerType = newType);
 
     return {
         getNickname,
@@ -69,6 +72,8 @@ const Player = (nickname = "Unknown Player") => {
         setPlayerMark,
         restartScore,
         setNickname,
+        getPlayerType,
+        setPlayerType,
     };
 };
 
@@ -78,10 +83,13 @@ const Players = (() => {
      */
     const player1 = Player("Player 1");
     player1.setPlayerMark("O");
+    player1.setPlayerType("human");
     player1.setState(true);
 
     const player2 = Player("Player 2");
     player2.setPlayerMark("X");
+    player2.setPlayerType("ai");
+    player2.setState(false);
 
     const getPlayer1 = () => player1;
     const getPlayer2 = () => player2;
@@ -238,22 +246,28 @@ const PlayerActions = (() => {
                 break;
 
             case 2: //Continue
-                tileElements.forEach((element) => {
-                    element.addEventListener("click", () => {
-                        let tile = getTile(
-                            Number(element.getAttribute("corX")),
-                            Number(element.getAttribute("corY"))
-                        );
-                        if (tile.getTileValue() === "") {
-                            const activePlayer = getActivePlayer();
-                            tile.setTileValue(activePlayer.getMark());
-                            tile.setTakenBy(activePlayer);
-                            GameBoard.refreshBoard();
-                            activateTiles(validateWinningCondition());
-                        }
+                const activePlayer = getActivePlayer();
+
+                if (activePlayer.getPlayerType() == "ai") {
+                    executeIAMovement(activePlayer);
+                    break;
+                } else {
+                    tileElements.forEach((element) => {
+                        element.addEventListener("click", () => {
+                            let tile = getTile(
+                                Number(element.getAttribute("corX")),
+                                Number(element.getAttribute("corY"))
+                            );
+                            if (tile.getTileValue() === "") {
+                                tile.setTileValue(activePlayer.getMark());
+                                tile.setTakenBy(activePlayer);
+                                GameBoard.refreshBoard();
+                                activateTiles(validateWinningCondition());
+                            }
+                        });
                     });
-                });
-                break;
+                    break;
+                }
 
             default:
                 break;
@@ -370,7 +384,40 @@ const PlayerActions = (() => {
         return 1; //Tie scenario
     };
 
-    return { activateTiles, restartPlayersScore, restartPlayersState };
+    const executeIAMovement = (activePlayer) => {
+        /**
+         * Filters the available tiles to pick one and left it marked
+         * as an AI movement
+         */
+        const tiles = [...document.querySelectorAll("div.tile")];
+        const tilesAvailable = [];
+
+        for (let i = 0; i < tiles.length; i++) {
+            let tile = getTile(
+                Number(tiles[i].getAttribute("corX")),
+                Number(tiles[i].getAttribute("corY"))
+            );
+            if (tile.getTileValue() === "") {
+                tilesAvailable.push(tile);
+            }
+        }
+
+        const randomTile =
+            tilesAvailable[Math.floor(Math.random() * tilesAvailable.length)];
+
+        setTimeout(() => {
+            randomTile.setTileValue(activePlayer.getMark());
+            randomTile.setTakenBy(activePlayer);
+            GameBoard.refreshBoard();
+            activateTiles(validateWinningCondition());
+        }, 1000);
+    };
+
+    return {
+        activateTiles,
+        restartPlayersScore,
+        restartPlayersState,
+    };
 })();
 
 const Game = (() => {
@@ -410,24 +457,35 @@ const Game = (() => {
         // Set up new players
         restartRounds();
         GameBoard.restartBoard();
+        PlayerActions.restartPlayersScore();
+        PlayerActions.restartPlayersState();
         PlayerActions.activateTiles(2);
 
         const p1Name = document.getElementById("p1-name");
+        const p1Type = document.getElementById("p1-type");
+
         const p2Name = document.getElementById("p2-name");
+        const p2Type = document.getElementById("p2-type");
 
         p1Name.value != ""
             ? Players.getPlayer1().setNickname(p1Name.value)
             : Players.getPlayer1().setNickname("Player 1");
 
+        p1Type.value != ""
+            ? Players.getPlayer1().setPlayerType(p1Type.value)
+            : Players.getPlayer1().setPlayerType("human");
+
         p2Name.value != ""
             ? Players.getPlayer2().setNickname(p2Name.value)
             : Players.getPlayer2().setNickname("Player 2");
 
+        p2Type.value != ""
+            ? Players.getPlayer2().setPlayerType(p2Type.value)
+            : Players.getPlayer2().setPlayerType("ai");
+
         p1Name.value = "";
         p2Name.value = "";
 
-        PlayerActions.restartPlayersScore();
-        PlayerActions.restartPlayersState();
         displayPlayersInfo();
         gameHeader.textContent = "Tic-Tac-Toe";
 
@@ -438,9 +496,10 @@ const Game = (() => {
         // Restart game with same player's config
         restartRounds();
         GameBoard.restartBoard();
-        PlayerActions.activateTiles(2);
         PlayerActions.restartPlayersScore();
         PlayerActions.restartPlayersState();
+        PlayerActions.activateTiles(2);
+
         displayPlayersInfo();
         gameHeader.textContent = "Tic-Tac-Toe";
     };
