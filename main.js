@@ -45,12 +45,14 @@ const Player = (nickname = "Unknown Player") => {
     let isActivePlayer = false;
     let mark = "";
     let playerType = "";
+    let winner = false;
 
     const getNickname = () => nickname;
     const getScore = () => score;
     const getState = () => isActivePlayer;
     const getMark = () => mark;
     const getPlayerType = () => playerType;
+    const isWinner = () => winner;
 
     const setNickname = (newName) => (nickname = newName);
     const addScorePoint = () => {
@@ -61,6 +63,8 @@ const Player = (nickname = "Unknown Player") => {
     const setPlayerMark = (newMark) => (mark = newMark);
     const restartScore = () => (score = 0);
     const setPlayerType = (newType) => (playerType = newType);
+    const setWinnerStatus = () => (winner = true);
+    const restartWinnerStatus = () => (winner = false);
 
     return {
         getNickname,
@@ -69,11 +73,14 @@ const Player = (nickname = "Unknown Player") => {
         getState,
         setState,
         getMark,
+        isWinner,
         setPlayerMark,
         restartScore,
         setNickname,
         getPlayerType,
         setPlayerType,
+        setWinnerStatus,
+        restartWinnerStatus,
     };
 };
 
@@ -145,7 +152,34 @@ const GameBoard = (() => {
 
     const getTilesArray = () => tilesArray;
 
-    return { getTilesArray, restartBoard, refreshBoard };
+    //to simulate and validate possible scenarios
+    const board = ["", "", "", "", "", "", "", "", ""];
+
+    const copyBoardForMinimax = () => {
+        const tiles = [...document.querySelectorAll("div.tile")];
+        for (let i = 0; i < tiles.length; i++) {
+            let tile = PlayerActions.getTile(
+                Number(tiles[i].getAttribute("corX")),
+                Number(tiles[i].getAttribute("corY"))
+            );
+            board[i] = tile.getTileValue();
+        }
+    };
+
+    const updateBoardForMinimax = (index, mark) => {
+        board[index] = mark;
+    };
+
+    const getBoardForMinimax = () => board;
+
+    return {
+        getTilesArray,
+        restartBoard,
+        refreshBoard,
+        updateBoardForMinimax,
+        copyBoardForMinimax,
+        getBoardForMinimax,
+    };
 })();
 
 const PlayerActions = (() => {
@@ -153,6 +187,7 @@ const PlayerActions = (() => {
      * Allows to add marks to the tiles validating each action according to
      * the game's rules
      */
+
     const restartPlayersState = () => {
         Players.getPlayer1().setState(true);
         Players.getPlayer2().setState(false);
@@ -161,6 +196,11 @@ const PlayerActions = (() => {
     const restartPlayersScore = () => {
         Players.getPlayer1().restartScore();
         Players.getPlayer2().restartScore();
+    };
+
+    const restartWinner = () => {
+        Players.getPlayer1().restartWinnerStatus();
+        Players.getPlayer2().restartWinnerStatus();
     };
 
     function getTile(x, y) {
@@ -188,21 +228,34 @@ const PlayerActions = (() => {
         if (Players.getPlayer1().getState()) {
             Players.getPlayer1().setState(false);
             Players.getPlayer2().setState(true);
-            p1Info.classList.remove(activeClass);
-            p2Info.classList.add(activeClass);
+            p1Info.classList.add(activeClass);
+            p2Info.classList.remove(activeClass);
             return Players.getPlayer1();
         }
 
         if (Players.getPlayer2().getState()) {
             Players.getPlayer1().setState(true);
             Players.getPlayer2().setState(false);
-            p1Info.classList.add(activeClass);
-            p2Info.classList.remove(activeClass);
+            p1Info.classList.remove(activeClass);
+            p2Info.classList.add(activeClass);
             return Players.getPlayer2();
         }
 
         console.log("Both players state is false");
         return 0;
+    };
+
+    const removeActiveClass = () => {
+        /**
+         * Remove the Active-player class from the html tags
+         */
+
+        const p1Info = document.getElementById("p1-info");
+        const p2Info = document.getElementById("p2-info");
+        const activeClass = "active-player";
+
+        p1Info.classList.remove(activeClass);
+        p2Info.classList.remove(activeClass);
     };
 
     const activateTiles = (gameState) => {
@@ -214,6 +267,8 @@ const PlayerActions = (() => {
 
         switch (gameState) {
             case 0: //Victory
+                removeActiveClass();
+
                 Game.newRound(); //+1 to the round counter
                 if (Game.getRound() >= 3) {
                     Game.showGameOverHeader();
@@ -224,23 +279,27 @@ const PlayerActions = (() => {
                     ? Players.getPlayer1().getNickname()
                     : Players.getPlayer2().getNickname();
 
+                document.getElementById("game-header").textContent =
+                    winner + " wins!";
+
                 tileElements.forEach((element) => {
-                    document.getElementById("game-header").textContent =
-                        winner + " wins!";
                     element.addEventListener("click", Game.continueNextGame);
                 });
                 break;
 
             case 1: //Tie
+                removeActiveClass();
+
                 Game.newRound(); //+1 to the round counter
                 if (Game.getRound() >= 3) {
                     Game.showGameOverHeader();
                     break; // Game over
                 }
 
+                document.getElementById("game-header").textContent =
+                    "It's a tie!";
+
                 tileElements.forEach((element) => {
-                    document.getElementById("game-header").textContent =
-                        "It's a tie!";
                     element.addEventListener("click", Game.continueNextGame);
                 });
                 break;
@@ -249,9 +308,21 @@ const PlayerActions = (() => {
                 const activePlayer = getActivePlayer();
 
                 if (activePlayer.getPlayerType() == "ai") {
-                    executeIAMovement(activePlayer);
+                    /**
+                     * Easy-level AI: Random legal movements
+                     */
+                    executeRandomMovement(activePlayer);
+                    break;
+                } else if (activePlayer.getPlayerType() == "aix") {
+                    /**
+                     * Unbeatable AI: Executes movements using the minimax algorithm
+                     */
+                    findBestMovement(activePlayer);
                     break;
                 } else {
+                    /**
+                     * Allows tiles to be clicked by a human player
+                     */
                     tileElements.forEach((element) => {
                         element.addEventListener("click", () => {
                             let tile = getTile(
@@ -299,7 +370,9 @@ const PlayerActions = (() => {
             tilesArray[0].getTileValue() !== ""
         ) {
             loser = getActivePlayer();
-            winner = tilesArray[0].getTakenBy().addScorePoint();
+            winner = tilesArray[0].getTakenBy();
+            winner.addScorePoint();
+            winner.setWinnerStatus(true);
             return 0;
         }
 
@@ -309,7 +382,9 @@ const PlayerActions = (() => {
             tilesArray[3].getTileValue() !== ""
         ) {
             loser = getActivePlayer();
-            winner = tilesArray[3].getTakenBy().addScorePoint();
+            winner = tilesArray[3].getTakenBy();
+            winner.addScorePoint();
+            winner.setWinnerStatus(true);
             return 0;
         }
 
@@ -319,7 +394,9 @@ const PlayerActions = (() => {
             tilesArray[6].getTileValue() !== ""
         ) {
             loser = getActivePlayer();
-            winner = tilesArray[6].getTakenBy().addScorePoint();
+            winner = tilesArray[6].getTakenBy();
+            winner.addScorePoint();
+            winner.setWinnerStatus(true);
             return 0;
         }
 
@@ -330,7 +407,9 @@ const PlayerActions = (() => {
             tilesArray[0].getTileValue() !== ""
         ) {
             loser = getActivePlayer();
-            winner = tilesArray[0].getTakenBy().addScorePoint();
+            winner = tilesArray[0].getTakenBy();
+            winner.addScorePoint();
+            winner.setWinnerStatus(true);
             return 0;
         }
 
@@ -340,7 +419,9 @@ const PlayerActions = (() => {
             tilesArray[1].getTileValue() !== ""
         ) {
             loser = getActivePlayer();
-            winner = tilesArray[1].getTakenBy().addScorePoint();
+            winner = tilesArray[1].getTakenBy();
+            winner.addScorePoint();
+            winner.setWinnerStatus(true);
             return 0;
         }
 
@@ -350,7 +431,9 @@ const PlayerActions = (() => {
             tilesArray[2].getTileValue() !== ""
         ) {
             loser = getActivePlayer();
-            winner = tilesArray[2].getTakenBy().addScorePoint();
+            winner = tilesArray[2].getTakenBy();
+            winner.addScorePoint();
+            winner.setWinnerStatus(true);
             return 0;
         }
 
@@ -361,7 +444,9 @@ const PlayerActions = (() => {
             tilesArray[0].getTileValue() !== ""
         ) {
             loser = getActivePlayer();
-            winner = tilesArray[0].getTakenBy().addScorePoint();
+            winner = tilesArray[0].getTakenBy();
+            winner.addScorePoint();
+            winner.setWinnerStatus(true);
             return 0;
         }
 
@@ -371,7 +456,9 @@ const PlayerActions = (() => {
             tilesArray[2].getTileValue() !== ""
         ) {
             loser = getActivePlayer();
-            winner = tilesArray[2].getTakenBy().addScorePoint();
+            winner = tilesArray[2].getTakenBy();
+            winner.addScorePoint();
+            winner.setWinnerStatus(true);
             return 0;
         }
 
@@ -384,7 +471,7 @@ const PlayerActions = (() => {
         return 1; //Tie scenario
     };
 
-    const executeIAMovement = (activePlayer) => {
+    const executeRandomMovement = (activePlayer) => {
         /**
          * Filters the available tiles to pick one and left it marked
          * as an AI movement
@@ -413,10 +500,133 @@ const PlayerActions = (() => {
         }, 1000);
     };
 
+    const executeMinimax = (depth, isMaximizing) => {
+        /**
+         * Minimax algorithm to seek the optimum route
+         */
+        const AIPlayer = Players.getPlayer1().getState() ? "X" : "O";
+        const opponent = Players.getPlayer2().getState() ? "X" : "O";
+
+        const board = GameBoard.getBoardForMinimax();
+
+        function checkWin(player) {
+            // Check rows, columns, and diagonals for a win
+            for (let i = 0; i < 9; i += 3) {
+                if (
+                    board[i] === player &&
+                    board[i + 1] === player &&
+                    board[i + 2] === player
+                ) {
+                    return true;
+                }
+            }
+            for (let i = 0; i < 3; i++) {
+                if (
+                    board[i] === player &&
+                    board[i + 3] === player &&
+                    board[i + 6] === player
+                ) {
+                    return true;
+                }
+            }
+            if (
+                (board[0] === player &&
+                    board[4] === player &&
+                    board[8] === player) ||
+                (board[2] === player &&
+                    board[4] === player &&
+                    board[6] === player)
+            ) {
+                return true;
+            }
+            return false;
+        }
+
+        function isBoardFull() {
+            return board.every((cell) => cell !== "");
+        }
+
+        // Base case: if the game is over, return the score
+        if (checkWin(AIPlayer)) {
+            return 1;
+        } else if (checkWin(opponent)) {
+            return -1;
+        } else if (isBoardFull()) {
+            return 0;
+        }
+
+        if (isMaximizing) {
+            let bestScore = -Infinity;
+            for (let i = 0; i < 9; i++) {
+                if (board[i] == "") {
+                    GameBoard.updateBoardForMinimax(i, AIPlayer);
+                    const score = executeMinimax(depth + 1, false);
+                    GameBoard.updateBoardForMinimax(i, "");
+                    bestScore = Math.max(score, bestScore);
+                }
+            }
+            return bestScore;
+        } else {
+            let bestScore = Infinity;
+            for (let i = 0; i < 9; i++) {
+                if (board[i] == "") {
+                    GameBoard.updateBoardForMinimax(i, opponent);
+                    const score = executeMinimax(depth + 1, true);
+                    GameBoard.updateBoardForMinimax(i, "");
+                    bestScore = Math.min(score, bestScore);
+                }
+            }
+            return bestScore;
+        }
+    };
+
+    function findBestMovement(activePlayer) {
+        /**
+         * Function to find the best movement for the computer
+         */
+        let bestScore = -Infinity;
+        let bestMove = -1;
+
+        GameBoard.copyBoardForMinimax();
+        const board = GameBoard.getBoardForMinimax();
+
+        for (let i = 0; i < 9; i++) {
+            if (board[i] == "") {
+                board[i] = activePlayer.getMark();
+                const score = executeMinimax(0, false);
+                board[i] = "";
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMove = i;
+                }
+            }
+        }
+
+        const tiles = [...document.querySelectorAll("div.tile")];
+        const tilesAvailable = [];
+
+        for (let i = 0; i < tiles.length; i++) {
+            let tile = getTile(
+                Number(tiles[i].getAttribute("corX")),
+                Number(tiles[i].getAttribute("corY"))
+            );
+            tilesAvailable.push(tile);
+        }
+
+        setTimeout(() => {
+            tilesAvailable[bestMove].setTileValue(activePlayer.getMark());
+            tilesAvailable[bestMove].setTakenBy(activePlayer);
+            GameBoard.refreshBoard();
+            activateTiles(validateWinningCondition());
+        }, 1000);
+    }
+
     return {
         activateTiles,
         restartPlayersScore,
         restartPlayersState,
+        restartWinner,
+        getTile,
     };
 })();
 
@@ -459,6 +669,7 @@ const Game = (() => {
         GameBoard.restartBoard();
         PlayerActions.restartPlayersScore();
         PlayerActions.restartPlayersState();
+        PlayerActions.restartWinner();
         PlayerActions.activateTiles(2);
 
         const p1Name = document.getElementById("p1-name");
@@ -498,6 +709,7 @@ const Game = (() => {
         GameBoard.restartBoard();
         PlayerActions.restartPlayersScore();
         PlayerActions.restartPlayersState();
+        PlayerActions.restartWinner();
         PlayerActions.activateTiles(2);
 
         displayPlayersInfo();
@@ -508,6 +720,7 @@ const Game = (() => {
         // Clean the GameBoard to start a new round
         GameBoard.restartBoard();
         PlayerActions.restartPlayersState();
+        PlayerActions.restartWinner();
         PlayerActions.activateTiles(2);
         displayPlayersInfo();
         gameHeader.textContent = "Tic-Tac-Toe";

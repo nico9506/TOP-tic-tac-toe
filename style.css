@@ -323,7 +323,7 @@ form select {
     border: none;
     background-color: var(--color-theme-sky);
     height: 2rem;
-    width: 5rem;
+    width: 10rem;
 }
 
 form select:hover {
