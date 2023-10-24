@@ -280,7 +280,7 @@ const PlayerActions = (() => {
                     : Players.getPlayer2().getNickname();
 
                 document.getElementById("game-header").textContent =
-                    winner + " wins!";
+                    winner + " wins! (round " + Game.getRound() + ")";
 
                 tileElements.forEach((element) => {
                     element.addEventListener("click", Game.continueNextGame);
@@ -297,7 +297,7 @@ const PlayerActions = (() => {
                 }
 
                 document.getElementById("game-header").textContent =
-                    "It's a tie!";
+                    "It's a tie! (round " + Game.getRound() + ")";
 
                 tileElements.forEach((element) => {
                     element.addEventListener("click", Game.continueNextGame);
@@ -664,14 +664,7 @@ const Game = (() => {
     };
 
     const newGame = () => {
-        // Set up new players
-        restartRounds();
-        GameBoard.restartBoard();
-        PlayerActions.restartPlayersScore();
-        PlayerActions.restartPlayersState();
-        PlayerActions.restartWinner();
-        PlayerActions.activateTiles(2);
-
+        // Set up new players with the info got from the modal
         const p1Name = document.getElementById("p1-name");
         const p1Type = document.getElementById("p1-type");
 
@@ -697,10 +690,9 @@ const Game = (() => {
         p1Name.value = "";
         p2Name.value = "";
 
-        displayPlayersInfo();
-        gameHeader.textContent = "Tic-Tac-Toe";
-
         modal.style.display = "none"; // Hide the modal after clicking START
+
+        restartGame();
     };
 
     const restartGame = () => {
@@ -713,7 +705,7 @@ const Game = (() => {
         PlayerActions.activateTiles(2);
 
         displayPlayersInfo();
-        gameHeader.textContent = "Tic-Tac-Toe";
+        gameHeader.textContent = "Tic-Tac-Toe (round 1)";
     };
 
     const continueNextGame = () => {
@@ -723,7 +715,8 @@ const Game = (() => {
         PlayerActions.restartWinner();
         PlayerActions.activateTiles(2);
         displayPlayersInfo();
-        gameHeader.textContent = "Tic-Tac-Toe";
+        gameHeader.textContent =
+            "Tic-Tac-Toe " + "(round " + (getRound() + 1) + ")";
     };
 
     const showGameOverHeader = () => {
